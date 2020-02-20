@@ -19,55 +19,52 @@ def read_img(filePath):
 def find_footprint(img):
 	gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 	edges = cv2.Canny(gray,50,150,apertureSize = 3)
-	dilate = cv2.dilate(edges, np.ones((10,10), dtype=np.uint8))
-	erode = cv2.erode(dilate, np.ones((10,10), dtype=np.uint8))
 
-	index_row = -1
-	index_col = -1
 	height, width = gray.shape
-	lines = cv2.HoughLines(dilate,1,np.pi/180,200)
-	for rho,theta in lines[0]:
-		a = np.cos(theta)
-		b = np.sin(theta)
-		x0 = a*rho
-		y0 = b*rho
-		x1 = int(x0 + 500*(-b))
-		y1 = int(y0 + 500*(a))
-		x2 = int(x0 - 500*(-b))
-		y2 = int(y0 - 500*(a))
+	row = find_row(edges, height, width)
+	if row < height // 2:
+		row = int(height - 1.7 * row)
+	col = find_col(edges, height, width)
+	print("row: {}. col: {}".format(row, col))
+	print("height: {}. width: {}".format(height, width))
 
-		print(x1, y1, x2, y2)
-		index_col = x1
+	return img[:row, col:]
 
-	row_sums = [0 for _ in range(height)]
-	for row in range(height):
-		for col in range(200, width):	
-			row_sums[row] += erode[row,col]
 
-	max_val = max(row_sums)
-	index_row = row_sums.index(max_val)
 
-	# result = erode[index_row:, :] if index_row < (height // 2) else erode[:index_row, :]
-	# height, width = result.shape
-	# col_sums = [0 for _ in range(width)]
-	# for col in range(width):
-	# 	for row in range(height):	
-	# 		col_sums[col] += result[row,col]
 
-	# max_val = max(col_sums)
-	# index_col = col_sums.index(max_val)
+def find_col(img, height, width):
+	lines = cv2.HoughLines(img,1,np.pi, 200) 
+	
+	for r,theta in lines[0]: 
+		a = np.cos(theta) 
+		b = np.sin(theta) 
+		x0 = a*r 
+		y0 = b*r 
+		x1 = int(x0 + 1000*(-b)) 
+		y1 = int(y0 + 1000*(a)) 
+		x2 = int(x0 - 1000*(-b)) 
+		y2 = int(y0 - 1000*(a))
 
-	# print("Height: {}. Width: {}".format(gray.shape[0], gray.shape[1]))
-	# print("Column: {}. Row: {}".format(index_col, index_row))
+	return x1
 
-	if (index_row < height // 2) and (index_col < width // 2):
-		return img[index_row:, index_col:]
-	elif (index_row < height // 2) and (index_col > width // 2):
-		return img[index_row:, :index_col]
-	elif (index_row > height // 2) and (index_col < width // 2):
-		return img[:index_row, index_col:]
-	else:
-		return img[:index_row, :index_col]
+
+def find_row(img, height, width):
+	lines = cv2.HoughLines(img,1,np.pi/135, 200) 
+	
+	for r,theta in lines[0]: 
+		a = np.cos(theta) 
+		b = np.sin(theta) 
+		x0 = a*r 
+		y0 = b*r 
+		x1 = int(x0 + 1000*(-b)) 
+		y1 = int(y0 + 1000*(a)) 
+		x2 = int(x0 - 1000*(-b)) 
+		y2 = int(y0 - 1000*(a))
+	
+	print(x1, y1, x2, y2)
+	return y1
+
 
 
 def find_vertexes(img):
