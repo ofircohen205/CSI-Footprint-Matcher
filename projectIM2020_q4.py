@@ -65,7 +65,7 @@ def plot_results(img, circles):
 
 
 def main():
-	paths = ['./images/q4/00004.jpg']
+	paths = ['./images/q4/00004.jpg', './images/q4/00079.png']
 
 	kernel = np.array([[0,1,0],[1,1,1],[0,1,0]], dtype=np.uint8)
 
