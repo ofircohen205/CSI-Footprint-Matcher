@@ -41,7 +41,7 @@ def find_medium_circles(gray, kernel):
 	opening = cv2.morphologyEx(gray, cv2.MORPH_CLOSE, kernel)
 	clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
 	cl = clahe.apply(opening)
-	blurred = cv2.medianBlur(cl, 7)
+	blurred = cv2.medianBlur(cl, 5)
 	circles = cv2.HoughCircles(blurred, cv2.HOUGH_GRADIENT, 1, 70, param1=100, param2=41, minRadius=5, maxRadius=37)
 	return circles
 
