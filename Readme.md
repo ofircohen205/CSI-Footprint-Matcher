@@ -15,7 +15,13 @@ Isolate footprint:
 3. Use HoughLines to find the width and height of an sub-image where the footprint exists
 
 Finding the ratio of the B&W rectangles:
-
+1. Convert from RGB to grayscale
+2. Smooth
+3. Threshold
+4. Detect edges
+5. Find contours
+6. Approximate contours with linear features
+7. Find "rectangles" which were structures that: had polygonalized contours possessing 4 points, were of sufficient area, had adjacent edges were ~90 degrees, had distance between "opposite" vertices was of sufficient size, etc.
 
 
 ## Part 2:
