@@ -19,7 +19,8 @@ def read_img(filePath):
 def find_circles(img, kernel):
 	gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 	blurred = cv2.medianBlur(gray, 3)
-	circles = cv2.HoughCircles(blurred, cv2.HOUGH_GRADIENT, 1, 15, param1=100, param2=27, minRadius=10, maxRadius=32)
+	gradient = cv2.morphologyEx(blurred, cv2.MORPH_GRADIENT, kernel)
+	circles = cv2.HoughCircles(gradient, cv2.HOUGH_GRADIENT, 1, 5, param1=78, param2=29, minRadius=11, maxRadius=27)
 	output = img.copy()
 	draw_circles(output, circles)
 	return output
@@ -65,14 +66,21 @@ def plot_results(img, circles):
 
 
 def main():
-	paths = ['./images/q4/00004.jpg']
+	paths = ['./images/q4/00004.jpg', './images/q4/00079.png']
 
 	kernel = np.array([[0,1,0],[1,1,1],[0,1,0]], dtype=np.uint8)
+	kernel1 = np.array(	[
+							[0,0,1,0,0],
+							[0,1,1,1,0],
+							[1,1,1,1,1],
+							[0,1,1,1,0],
+							[0,0,1,0,0]
+						], dtype=np.uint8)
 
 	for path in paths:
 		img = read_img(path)
-		circle_img = find_circles(img, kernel)
-		plot_results(img, circle_img)
+		output = find_circles(img, kernel1)
+		plot_results(img, output)
 
 if __name__ == "__main__":
 	main()

@@ -19,86 +19,88 @@ def read_img(filePath):
 def find_footprint(img):
 	gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 	edges = cv2.Canny(gray,50,150,apertureSize = 3)
-	dilate = cv2.dilate(edges, np.ones((10,10), dtype=np.uint8))
-	erode = cv2.erode(dilate, np.ones((10,10), dtype=np.uint8))
 
-	index_row = -1
-	index_col = -1
 	height, width = gray.shape
-	lines = cv2.HoughLines(dilate,1,np.pi/180,200)
-	for rho,theta in lines[0]:
-		a = np.cos(theta)
-		b = np.sin(theta)
-		x0 = a*rho
-		y0 = b*rho
-		x1 = int(x0 + 500*(-b))
-		y1 = int(y0 + 500*(a))
-		x2 = int(x0 - 500*(-b))
-		y2 = int(y0 - 500*(a))
+	row = find_row(edges, height, width)
+	if row < height // 2:
+		row = int(height - row)
+	col = find_col(edges, height, width)
+	print("row: {}. col: {}".format(row, col))
+	print("height: {}. width: {}".format(height, width))
 
-		print(x1, y1, x2, y2)
-		index_col = x1
-
-	row_sums = [0 for _ in range(height)]
-	for row in range(height):
-		for col in range(200, width):	
-			row_sums[row] += erode[row,col]
-
-	max_val = max(row_sums)
-	index_row = row_sums.index(max_val)
-
-	# result = erode[index_row:, :] if index_row < (height // 2) else erode[:index_row, :]
-	# height, width = result.shape
-	# col_sums = [0 for _ in range(width)]
-	# for col in range(width):
-	# 	for row in range(height):	
-	# 		col_sums[col] += result[row,col]
-
-	# max_val = max(col_sums)
-	# index_col = col_sums.index(max_val)
-
-	# print("Height: {}. Width: {}".format(gray.shape[0], gray.shape[1]))
-	# print("Column: {}. Row: {}".format(index_col, index_row))
-
-	if (index_row < height // 2) and (index_col < width // 2):
-		return img[index_row:, index_col:]
-	elif (index_row < height // 2) and (index_col > width // 2):
-		return img[index_row:, :index_col]
-	elif (index_row > height // 2) and (index_col < width // 2):
-		return img[:index_row, index_col:]
-	else:
-		return img[:index_row, :index_col]
+	return img[:row, col:]
 
 
-def find_vertexes(img):
+def find_col(img, height, width):
+	lines = cv2.HoughLines(img,1,np.pi, 200) 
+	
+	for r,theta in lines[0]: 
+		a = np.cos(theta) 
+		b = np.sin(theta) 
+		x0 = a*r 
+		y0 = b*r 
+		x1 = int(x0 + 1000*(-b)) 
+		y1 = int(y0 + 1000*(a)) 
+		x2 = int(x0 - 1000*(-b)) 
+		y2 = int(y0 - 1000*(a))
+
+	return x1
+
+
+def find_row(img, height, width):
+	lines = cv2.HoughLines(img,1,np.pi/135, 200) 
+	
+	for r,theta in lines[0]: 
+		a = np.cos(theta) 
+		b = np.sin(theta) 
+		x0 = a*r 
+		y0 = b*r 
+		x1 = int(x0 + 1000*(-b)) 
+		y1 = int(y0 + 1700*(a)) 
+		x2 = int(x0 - 1000*(-b)) 
+		y2 = int(y0 - 1000*(a))
+	
+	return y1
+
+
+
+def find_vertices(img, distMax, distMin):
+	vertices = []
 	gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-	gray = np.float32(gray)
-	dst = cv2.cornerHarris(gray, 3, 5, 0.5)
-	img[dst > 0.01 * dst.max()] = [255,0,0]
-	return img
+	clahe = cv2.createCLAHE(clipLimit=16.0, tileGridSize=(16,16))
+	cl = clahe.apply(gray)
+	blur = cv2.GaussianBlur(cl,(3,3),0)
+	_, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+	contours, _hierarchy = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+	for cnt in contours:
+		cnt_len = cv2.arcLength(cnt, True)
+		cnt = cv2.approxPolyDP(cnt, 0.02*cnt_len, True)
+		if len(cnt) == 4 and cv2.contourArea(cnt) > 1000 and cv2.isContourConvex(cnt):
+			cnt = cnt.reshape(-1, 2)
+			for i in range(4):
+				if(angle_cos(cnt[i], cnt[(i+1) % 4], cnt[(i+2) % 4], distMax, distMin)):
+					vertices.append(cnt[(i+1) % 4])
+	return vertices
 
-
-
-def find_rectangles_points(img, distMax, distMin):
-	img = cv2.GaussianBlur(img, (3, 3), 0)
-	squares = []
-	for gray in cv2.split(img):
-		for thrs in range(0, 255, 25):
-			if thrs == 0:
-				bin = cv2.Canny(gray, 0, 50, apertureSize=5)
-				bin = cv2.dilate(bin, None)
-			else:
-				_retval, bin = cv2.threshold(gray, thrs, 255, cv2.THRESH_BINARY)
-			contours, _hierarchy = cv2.findContours(bin, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-			for cnt in contours:
-				cnt_len = cv2.arcLength(cnt, True)
-				cnt = cv2.approxPolyDP(cnt, 0.02*cnt_len, True)
-				if len(cnt) == 4 and cv2.contourArea(cnt) > 800 and cv2.isContourConvex(cnt):
-					cnt = cnt.reshape(-1, 2)
-					for i in range(4):
-						if(angle_cos(cnt[i], cnt[(i+1) % 4], cnt[(i+2) % 4], distMax, distMin)):
-							squares.append(cnt[(i+1) % 4])
-	return squares
+	# img = cv2.GaussianBlur(img, (3, 3), 0)
+	# for gray in cv2.split(img):
+	# 	for thrs in range(0, 255, 25):
+	# 		if thrs == 0:
+	# 			bin = cv2.Canny(gray, 0, 50, apertureSize=5)
+	# 			bin = cv2.dilate(bin, None)
+	# 		else:
+	# 			_retval, bin = cv2.threshold(gray, thrs, 255, cv2.THRESH_BINARY)
+	# 		contours, _hierarchy = cv2.findContours(bin, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+	# 		print("contours: {}. type: {}".format(contours, type(contours)))
+	# 		for cnt in contours:
+	# 			cnt_len = cv2.arcLength(cnt, True)
+	# 			cnt = cv2.approxPolyDP(cnt, 0.02*cnt_len, True)
+	# 			if len(cnt) == 4 and cv2.contourArea(cnt) > 1000 and cv2.isContourConvex(cnt):
+	# 				cnt = cnt.reshape(-1, 2)
+	# 				for i in range(4):
+	# 					if(angle_cos(cnt[i], cnt[(i+1) % 4], cnt[(i+2) % 4], distMax, distMin)):
+	# 						vertices.append(cnt[(i+1) % 4])
+	# return vertices
 
 
 def angle_cos(p0, p1, p2, distMax, distMin):
@@ -111,16 +113,23 @@ def angle_cos(p0, p1, p2, distMax, distMin):
 		return False
 
 
-def draw_points (point,img):
-	delta = 6
-	w,h,d = img.shape
+def draw_points(vertex, img):
+	delta = 10
+	height, width, channel = img.shape
 	for i in range(-1*delta,delta,1):
 		for j in range(-1*delta,delta, 1):
-			if(point[1]+i<w and point[0]+j<h):
-				img[point[1]+i,point[0]+j] = [255,0,0]
+			if vertex[1]+i < height and vertex[0]+j < width:
+				img[vertex[1]+i, vertex[0]+j] = [255,0,0]
 
 
-def plot_results(img, footprint, rectangles):
+def remove_redundant_vertices(vertices, steps=15):
+	list_vertices = list(map(tuple, np.sort(vertices)))
+	print(list_vertices)
+
+	return np.sort(vertices)
+
+
+def plot_results(img, footprint, output):
 	plt.figure(figsize=(20, 20))
 	plt.subplot(131)
 	plt.imshow(img, cmap='gray')
@@ -133,7 +142,7 @@ def plot_results(img, footprint, rectangles):
 	plt.xticks([])
 	plt.yticks([])
 	plt.subplot(133)
-	plt.imshow(rectangles, cmap = 'gray')
+	plt.imshow(output, cmap = 'gray')
 	plt.title('Black Rectangles')
 	plt.xticks([])
 	plt.yticks([])
@@ -145,13 +154,12 @@ def main():
 
 	for path in paths:
 		img = read_img(path)
-		footprint1 = find_footprint(img.copy())
-		rectangles = find_vertexes(img.copy())
-		# rectangles_points = find_rectangles_points(img.copy(), 165, 40)
-		# rectangles = img.copy()
-		# for point in rectangles_points:
-		# 	draw_points(point, rectangles)
-		plot_results(img, footprint1, rectangles)
+		footprint = find_footprint(img.copy())
+		vertices = find_vertices(img.copy(), 200, 20)
+		output = img.copy()
+		for vertex in vertices:
+			draw_points(vertex, output)
+		plot_results(img, footprint, output)
 
 if __name__ == "__main__":
 	main()
