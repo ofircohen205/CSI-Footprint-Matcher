@@ -48,7 +48,17 @@ We've dealt with the issue with the following steps:
 
 
 ## Part 3:
+Simulate a search engine that gets an image of a cropped and noised footprint, and finds the full footprint image of this cropped image, from the Database of footprint images.
 
+We've dealt with the issue with the following steps:
+1. Convert RGB cropped image to Grayscale
+2. Improve the cropped image by removing the noise and not related parts in it
+3. Smooth the cropped image with blur() using filter size 5x5 (on some images we ran it more than one time). On the images that had salt and pepper noise we used morphologyEx() with MORPH_CLOSE and kernel of ones from size 3x3
+4. Convert RGB full image from DB to Grayscale
+5. Resize the DB image we compare to the width and height of the cropped image (for the ssim check that will come later)
+6. Crop the needed area (the upper area of the footprint in that case) from the full DB image for the comparison with the cropped image
+7. Smooth the DB image with blur() using filter from the sizes 5x5, 7x7, 9x9 (each cropped input image has a different filter, and on some images we ran it more than one time)
+8. Send the improved cropped and DB images to the ssim (=structural similarity index) and mse (=mean squared error) functions, to make the comparison. The ssim is a value between -1 and 1, when 1 means perfect match and -1 means there no match at all. The mse value should be as little as possible. We gave the ssim check more weight than to the mse check in the comparison between the images. 
 
 
 ## Part 4:
