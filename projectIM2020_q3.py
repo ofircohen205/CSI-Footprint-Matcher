@@ -1,7 +1,7 @@
 ##Saar Weitzman##
 ##I.D: 204175137##
 
-############################ IMPORT S##############################
+############################ IMPORTS ##############################
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
