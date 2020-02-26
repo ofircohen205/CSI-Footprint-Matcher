@@ -30,27 +30,31 @@ def find_circles(img, kernel1, kernel2):
 
 def find_big_circles(gray, kernel):
 	gradient = cv2.morphologyEx(gray, cv2.MORPH_GRADIENT, kernel)
-	clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-	cl = clahe.apply(gradient)
-	blurred = cv2.medianBlur(cl, 7)
-	circles = cv2.HoughCircles(blurred, cv2.HOUGH_GRADIENT, 1, 70, param1=100, param2=40, minRadius=15, maxRadius=45)
+	#clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+	#cl = clahe.apply(gradient)
+	#blurred = cv2.medianBlur(cl, 7)
+	blurred = cv2.blur(gradient, (3,3))
+	blurred = cv2.blur(blurred, (5,5))
+	circles = cv2.HoughCircles(blurred, cv2.HOUGH_GRADIENT, 1, 90, param1=100, param2=51.4, minRadius=15, maxRadius=45)
 	return circles
 
 
 def find_medium_circles(gray, kernel):
 	opening = cv2.morphologyEx(gray, cv2.MORPH_CLOSE, kernel)
-	clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-	cl = clahe.apply(opening)
-	blurred = cv2.medianBlur(cl, 5)
-	circles = cv2.HoughCircles(blurred, cv2.HOUGH_GRADIENT, 1, 70, param1=100, param2=41, minRadius=5, maxRadius=37)
+	# clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
+	# cl = clahe.apply(opening)
+	# blurred = cv2.medianBlur(cl, 5)
+	blurred = cv2.blur(opening, (5,5))
+	circles = cv2.HoughCircles(blurred, cv2.HOUGH_GRADIENT, 1, 48, param1=100, param2=50, minRadius=10, maxRadius=37)
 	return circles
 
 
 def find_little_circles(gray):
-	clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
-	cl = clahe.apply(gray)
-	blurred = cv2.medianBlur(cl, 5)
-	circles = cv2.HoughCircles(blurred, cv2.HOUGH_GRADIENT, 1, 5, param1=100, param2=33, minRadius=1, maxRadius=23)
+	#clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
+	#cl = clahe.apply(gray)
+	#blurred = cv2.medianBlur(cl, 5)
+	blurred = cv2.blur(gray, (5,5))
+	circles = cv2.HoughCircles(blurred, cv2.HOUGH_GRADIENT, 1, 5, param1=100, param2=33, minRadius=3, maxRadius=21)
 	return circles
 
 
@@ -93,9 +97,10 @@ def plot_results(img, circles):
 def main():
 	paths = [
 				'./images/q2/00001.png', './images/q2/00002.png', './images/q2/00003.png', './images/q2/00005.png', './images/q2/00006.png',
-				'./images/q2/00007.png', './images/q2/00010.png', './images/q2/00471.png', './images/q2/00472.png', './images/q2/00473.png', 
+				'./images/q2/00007.png', './images/q2/00010.png', './images/q2/00471.png', './images/q2/00009.png', './images/q2/00473.png', 
 				'./images/q2/00475.png', './images/q2/00476.png', './images/q2/00477.png', './images/q2/00478.png', './images/q2/00480.png'
 			]
+				
 
 	kernel1 = np.array(	[
 							[0,0,1,0,0],
@@ -105,7 +110,11 @@ def main():
 							[0,0,1,0,0]
 						], dtype=np.uint8)
 
-	kernel2 = np.array([[0,1,0],[1,1,1],[0,1,0]], dtype=np.uint8)
+	kernel2 = np.array( [
+							[0,1,0],
+							[1,1,1],
+							[0,1,0]
+						], dtype=np.uint8)
 
 	for path in paths:
 		img = read_img(path)
