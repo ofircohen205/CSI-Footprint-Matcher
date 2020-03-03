@@ -64,69 +64,44 @@ def find_row(img, height, width):
 
 
 
-def find_vertices(img, distMax, distMin):
-	vertices = []
-	gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-	clahe = cv2.createCLAHE(clipLimit=16.0, tileGridSize=(16,16))
-	cl = clahe.apply(gray)
-	blur = cv2.GaussianBlur(cl,(3,3),0)
-	_, thresh = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
-	contours, _hierarchy = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-	for cnt in contours:
-		cnt_len = cv2.arcLength(cnt, True)
-		cnt = cv2.approxPolyDP(cnt, 0.02*cnt_len, True)
-		if len(cnt) == 4 and cv2.contourArea(cnt) > 1000 and cv2.isContourConvex(cnt):
-			cnt = cnt.reshape(-1, 2)
-			for i in range(4):
-				if(angle_cos(cnt[i], cnt[(i+1) % 4], cnt[(i+2) % 4], distMax, distMin)):
-					vertices.append(cnt[(i+1) % 4])
-	return vertices
+def find_vertices(img, vertices):
+	blur = cv2.GaussianBlur(img, (5,5), 0)
+	gray = cv2.cvtColor(blur, cv2.COLOR_RGB2GRAY)
+	threshes = []
+	thresh1 = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 31, 5)
+	threshes.append(thresh1)
+	thresh2 = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 111, 0)
+	threshes.append(thresh2)
 
-	# img = cv2.GaussianBlur(img, (3, 3), 0)
-	# for gray in cv2.split(img):
-	# 	for thrs in range(0, 255, 25):
-	# 		if thrs == 0:
-	# 			bin = cv2.Canny(gray, 0, 50, apertureSize=5)
-	# 			bin = cv2.dilate(bin, None)
-	# 		else:
-	# 			_retval, bin = cv2.threshold(gray, thrs, 255, cv2.THRESH_BINARY)
-	# 		contours, _hierarchy = cv2.findContours(bin, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-	# 		print("contours: {}. type: {}".format(contours, type(contours)))
-	# 		for cnt in contours:
-	# 			cnt_len = cv2.arcLength(cnt, True)
-	# 			cnt = cv2.approxPolyDP(cnt, 0.02*cnt_len, True)
-	# 			if len(cnt) == 4 and cv2.contourArea(cnt) > 1000 and cv2.isContourConvex(cnt):
-	# 				cnt = cnt.reshape(-1, 2)
-	# 				for i in range(4):
-	# 					if(angle_cos(cnt[i], cnt[(i+1) % 4], cnt[(i+2) % 4], distMax, distMin)):
-	# 						vertices.append(cnt[(i+1) % 4])
-	# return vertices
+	for thresh in threshes:
+		_, contours, _hierarchy = cv2.findContours(thresh, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+		for cnt in contours:
+			approx = cv2.approxPolyDP(cnt, 0.2 * len(cnt), True)
+			if len(approx) == 4:
+				if cv2.contourArea(cnt) > 9000 and cv2.contourArea(cnt) < 20000:
+					vertices.append(cnt)
 
 
-def angle_cos(p0, p1, p2, distMax, distMin):
-	d1, d2 = (p0-p1).astype('float'), (p2-p1).astype('float')
-	dis1, dis2 = np.sqrt((p0[0]-p1[0])**2 + (p0[1]-p1[1])**2) ,np.sqrt((p2[0]-p1[0])**2 + (p2[1]-p1[1])**2)
-	arccos = np.arccos(np.dot(d1,d2) / (np.sqrt(d1[0]**2 + d1[1]**2) * np.sqrt(d2[0]**2 + d2[1]**2)))
-	if(0 < arccos < 1.70 and (distMin<dis1<distMax) and (distMin<dis2<distMax) ):
-		return True
-	else:
-		return False
+def draw_points(cnt, img):
+	min_width=99999
+	max_width=0
+	min_height=99999
+	max_height=0
+	for points in cnt:
+		for point in points:
+			if(point[0]< min_width):
+				min_width=point[0]
+			if (point[0] > max_width):
+				max_width = point[0]
+			if (point[1] < min_height):
+				min_height = point[1]
+			if (point[1] > max_height):
+				max_height = point[1]
 
-
-def draw_points(vertex, img):
-	delta = 10
-	height, width, channel = img.shape
-	for i in range(-1*delta,delta,1):
-		for j in range(-1*delta,delta, 1):
-			if vertex[1]+i < height and vertex[0]+j < width:
-				img[vertex[1]+i, vertex[0]+j] = [255,0,0]
-
-
-def remove_redundant_vertices(vertices, steps=15):
-	list_vertices = list(map(tuple, np.sort(vertices)))
-	print(list_vertices)
-
-	return np.sort(vertices)
+	cv2.circle(img, (min_width, min_height), 5, (255, 0, 0), 10)
+	cv2.circle(img, (max_width, min_height), 5, (255, 0, 0), 10)
+	cv2.circle(img, (min_width, max_height), 5, (255, 0, 0), 10)
+	cv2.circle(img, (max_width, max_height), 5, (255, 0, 0), 10)
 
 
 def plot_results(img, footprint, output):
@@ -151,12 +126,12 @@ def plot_results(img, footprint, output):
 
 def main():
 	paths = ['./images/q1/1.jpg', './images/q1/7.JPG']
-
 	for path in paths:
 		img = read_img(path)
 		footprint = find_footprint(img.copy())
-		vertices = find_vertices(img.copy(), 200, 20)
+		vertices = []
 		output = img.copy()
+		find_vertices(output, vertices)
 		for vertex in vertices:
 			draw_points(vertex, output)
 		plot_results(img, footprint, output)

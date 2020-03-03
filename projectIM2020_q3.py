@@ -198,7 +198,7 @@ def find_similar_db_image(img, input_num):
             db_img_to_cmp = adjust_db_image_to_input_1_2(db_img_to_cmp, img)
 
         else: # input_num = 6, image 00001_3
-             db_img_to_cmp = adjust_db_image_to_input_1_3(db_img_to_cmp, img)
+            db_img_to_cmp = adjust_db_image_to_input_1_3(db_img_to_cmp, img)
 
         # ssim = structural similarity index between two images. It returns a value between -1 and 1, when 1 means perfect match and -1 means there no match at all
         s = ssim(img, db_img_to_cmp)
