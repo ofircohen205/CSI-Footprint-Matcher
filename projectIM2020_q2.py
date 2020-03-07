@@ -34,8 +34,7 @@ def find_big_circles(gray, kernel):
 	#cl = clahe.apply(gradient)
 	#blurred = cv2.medianBlur(cl, 7)
 	blurred = cv2.blur(gradient, (3,3))
-	blurred = cv2.blur(blurred, (5,5))
-	circles = cv2.HoughCircles(blurred, cv2.HOUGH_GRADIENT, 1, 90, param1=100, param2=51.4, minRadius=15, maxRadius=45)
+	circles = cv2.HoughCircles(blurred, cv2.HOUGH_GRADIENT, 1, 70, param1=100, param2=55.5, minRadius=17, maxRadius=45)
 	return circles
 
 
@@ -44,8 +43,8 @@ def find_medium_circles(gray, kernel):
 	# clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
 	# cl = clahe.apply(opening)
 	# blurred = cv2.medianBlur(cl, 5)
-	blurred = cv2.blur(opening, (5,5))
-	circles = cv2.HoughCircles(blurred, cv2.HOUGH_GRADIENT, 1, 48, param1=100, param2=50, minRadius=10, maxRadius=37)
+	blurred = cv2.blur(opening, (3,3))
+	circles = cv2.HoughCircles(blurred, cv2.HOUGH_GRADIENT, 1, 48, param1=100, param2=55, minRadius=10, maxRadius=37)
 	return circles
 
 
@@ -54,7 +53,7 @@ def find_little_circles(gray):
 	#cl = clahe.apply(gray)
 	#blurred = cv2.medianBlur(cl, 5)
 	blurred = cv2.blur(gray, (5,5))
-	circles = cv2.HoughCircles(blurred, cv2.HOUGH_GRADIENT, 1, 5, param1=100, param2=33, minRadius=3, maxRadius=21)
+	circles = cv2.HoughCircles(blurred, cv2.HOUGH_GRADIENT, 1, 5, param1=100, param2=33, minRadius=3, maxRadius=20)
 	return circles
 
 
