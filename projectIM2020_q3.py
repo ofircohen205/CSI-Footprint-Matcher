@@ -1,5 +1,6 @@
-##Saar Weitzman##
-##I.D: 204175137##
+### Students: Ofir Cohen, Saar Weitzman ###
+### ID: 312255847, 204175137 ###
+### Date: 22/3/2020 ###
 
 ############################ IMPORTS ##############################
 import cv2
@@ -7,7 +8,6 @@ import numpy as np
 from matplotlib import pyplot as plt
 from skimage.measure import compare_ssim as ssim
 ###################################################################
-
 
 
 def fix_img_size(img, cut_pixels_left, cut_pixels_right, cut_pixels_top, cut_pixels_bottom):
@@ -21,20 +21,6 @@ def fix_img_size(img, cut_pixels_left, cut_pixels_right, cut_pixels_top, cut_pix
     return new_img
 
 
-def get_img_name(num):
-    '''
-    The function gets a number and return back the name of the image need to be pulled next from the DB
-    '''
-    length, img_name = len(str(num)), ""
-    for _ in range(5 - length):
-        img_name += "0"
-
-    if num == 0:
-        img_name += "0"  # the first picture in database has 6 digits, all the others have 5 digits
-    img_name += "{}".format(num)
-    return img_name
-
-
 def mse(imgA, imgB):
     '''
 	the 'Mean Squared Error' between the two images is the sum of the squared difference between the two images
@@ -42,17 +28,6 @@ def mse(imgA, imgB):
     err = np.sum((imgA.astype("float") - imgB.astype("float")) ** 2)
     err /= float(imgA.shape[0] * imgA.shape[1])
     return err  # return the MSE, the lower the error, the more "similar" the two images are
-
-
-def showImages(img, blurred_img, edged_img):
-    '''
-    The function gets images and displayed them on screen 
-    '''
-    plt.subplot(121), plt.imshow(img, cmap='gray'), plt.title('Input image')
-    plt.xticks([]), plt.yticks([])
-    plt.subplot(122), plt.imshow(edged_img, cmap='gray'), plt.title('DB image')
-    plt.xticks([]), plt.yticks([])
-    plt.show()
 
 
 def input_image(img_name, left_margin, right_margin, top_margin, buttom_margin):
@@ -127,14 +102,101 @@ def find_similar_db_image(img, input_num):
 
     return ssim_max, mse_min, db_closest_img, db_closest_img_name
 
+######################################## Start of new solution to q3#############################################################
+
+def showImages(input_img, db_img):
+    '''
+    The function gets images and displayed them on screen 
+    '''
+    plt.subplot(121), plt.imshow(input_img, cmap='gray'), plt.title('Input image')
+    plt.xticks([]), plt.yticks([])
+    plt.subplot(122), plt.imshow(db_img, cmap='gray'), plt.title('DB image')
+    plt.xticks([]), plt.yticks([])
+    plt.show()
+
+
+def get_img_name(num):
+    '''
+    The function gets a number and return back the name of the image need to be pulled next from the DB
+    '''
+    length, img_name = len(str(num)), ""
+    for _ in range(5 - length):
+        img_name += "0"
+
+    if num == 0:
+        img_name += "0"  # the first picture in database has 6 digits, all the others have 5 digits
+    img_name += "{}".format(num)
+    return img_name
+
+
+def get_input_img_for_comparison(img_name):
+    '''
+    The function gets an input image name, read it, clean it for a better matching and returns it
+    '''
+    input_img = cv2.imread("images/q3/{}".format(img_name))
+    kernel = np.ones((3,3), np.uint8) # kernel for the morphologyEx- to get rid from the noise
+    improved_img = cv2.morphologyEx(input_img, cv2.MORPH_CLOSE, kernel)
+    blurred_input_img = cv2.blur(improved_img, (5,5))
+    return blurred_input_img, input_img
+
+
+def sift_algorithm(input_img, db_img):
+    '''
+    The function runs sift algorithm on input_img and db_img, find the number of good points in the comparison and returns that number
+    '''
+    sift = cv2.xfeatures2d.SIFT_create()
+    key_point_1, desc_1 = sift.detectAndCompute(input_img, None)
+    key_point_2, desc_2 = sift.detectAndCompute(db_img, None)
+    
+    index_params = dict(algorithm=0, trees=5)
+    search_params = dict()
+    flann = cv2.FlannBasedMatcher(index_params, search_params)
+    matches = flann.knnMatch(desc_1, desc_2, k=2)
+
+    ratio = 0.6 # The ratio helps us to choose the threshold distance between 2 elements
+    good_points = []
+    for m, n in matches: # m is an element from the first image and n is an element from the second image
+        if m.distance < ratio * n.distance: # The lower the distance between those 2 elements, the better is the match
+            good_points.append(m)
+
+    # result = cv2.drawMatches(input_img, key_point_1, db_img, key_point_2, good_points, None)
+    return good_points
+
+
+def compare_input_img_with_db_imgs(img_name):
+    '''
+    The function compares between the input image and all the images in the database. It prints the db_img which had
+    the best match to the input_img
+    '''
+    DB_size = 1176
+    best_match_input_img, maximum_good_points = np.array([]), 0
+
+    blurred_input_img, input_img = get_input_img_for_comparison(img_name)
+
+    for img_num in range(DB_size):
+        current_img_name = get_img_name(img_num)
+        db_img = cv2.imread("images/q3/DB/{}.png".format(current_img_name), 0)
+
+        good_points = sift_algorithm(blurred_input_img, db_img)
+        if len(good_points) > maximum_good_points:
+            maximum_good_points = len(good_points)
+            best_match_input_img = db_img
+
+    print("The number of matches of the most similar image is {}".format(maximum_good_points))
+    showImages(input_img, best_match_input_img)
+
+
 ################################################# MAIN ######################################################
 
 if __name__ == "__main__":
-    num_of_inputs = 6
-    input_imgs = []
-
     input_imgs_names = ["00001_1.png", "00001_2.png", "00001_3.png", "00471_1.png", "00471_2.png", "00471_3.png"]
     
+    for img_name in input_imgs_names:
+        compare_input_img_with_db_imgs(img_name)
+
+
+'''
+    input_imgs = []
     for i in range(len(input_imgs_names)):
         input_img, blurred_input_img = get_input_img(i, input_imgs_names[i])
         # plt.imshow(blurred_input_img, cmap='gray'), plt.show() #show the input image after adjusments
@@ -148,3 +210,4 @@ if __name__ == "__main__":
 
         print("The most similar image is {}, with ssim {} and mse {}".format(db_closest_img_name, ssim_max, mse_min))
         showImages(input_img, blurred_input_img, db_closest_img)
+'''
