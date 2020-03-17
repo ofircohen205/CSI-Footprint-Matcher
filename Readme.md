@@ -49,6 +49,7 @@ We've dealt with the issue with the following steps:
 
 ## Part 3:
 Simulate a search engine that gets an image of a cropped and noised footprint, and finds the full footprint image of this cropped image, from the Database of footprint images.
+######Important: to run this part you should run the following cmds: pip install opencv-python==3.4.2.16, pip install opencv-contrib-python==3.4.2.16
 
 We've dealt with the issue with the following steps:
 1. Convert RGB cropped image to Grayscale
