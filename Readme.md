@@ -52,13 +52,13 @@ Simulate a search engine that gets an image of a cropped and noised footprint, a
 
 We've dealt with the issue with the following steps:
 1. Convert RGB cropped image to Grayscale
-2. Improve the cropped image by removing the noise and not related parts in it
-3. Smooth the cropped image by running morphologyEx() with MORPH_CLOSE and kernel of ones from size 3x3, blur() using filter size 5x5, run it two times. 
-4. Convert RGB full image from DB to Grayscale
-5. Resize the DB image we compare to the width and height of the cropped image (for the "ssim" check that will come later)
-6. Crop the relevant area (the upper area of the footprint in our case) from the full DB image for the comparison with the cropped image
-7. Smooth the DB image by running morphologyEx() with MORPH_CLOSE and kernel of ones from size 3x3, blur() using filter of size 7x7, and use again blur() with filter of size 5x5
-8. Send the fixed cropped and DB images to the ssim (=structural similarity index) and mse (=mean squared error) functions, to make the comparison. The ssim is a value between -1 and 1, when 1 means perfect match and -1 means there no match at all. The mse value should be as little as possible. We gave the ssim check more weight than to the mse check in the comparison between the images. 
+2. Smooth the cropped image by running morphologyEx() with MORPH_CLOSE and kernel of ones from size 3x3, blur() using filter size 5x5. 
+3. Convert RGB full image from DB to Grayscale
+4. Run SIFT (Scale-Invariant Feature Transform) algorithm on both cropped and database images to get the key-points and descriptors of them.
+5. Run FlannBasedMatcher method which is used to find the matches between the descriptors of the 2 images.
+6. Find the matches between the 2 images, and store those matches in the 'matches' array. ('matches' array will contain all possible matches, also false matches).
+7. Apply a ratio test to select only the good matches. The quality of a match is define by the distance. The lower the distancre is, the more similar the features are. By applying the ratio test we can decide to take only the matches with lower distance, so higher quality.
+8. Save the image with the maximum good points from all the database images.
 
 
 ## Part 4:
