@@ -1,6 +1,6 @@
 ### Students: Ofir Cohen, Saar Weitzman ###
 ### ID: 312255847, 204175137 ###
-### Date: 22/3/2020 ###
+### Date: 29/3/2020 ###
 
 import cv2
 import numpy as np
@@ -32,7 +32,7 @@ def find_footprint(img):
 
 
 def find_col(img, height, width):
-	lines = cv2.HoughLines(img,1,np.pi, 200) 
+	lines = cv2.HoughLines(img, 1, np.pi, 200) 
 	
 	for r,theta in lines[0]: 
 		a = np.cos(theta) 
@@ -48,7 +48,7 @@ def find_col(img, height, width):
 
 
 def find_row(img, height, width):
-	lines = cv2.HoughLines(img,1,np.pi/135, 200) 
+	lines = cv2.HoughLines(img, 1, np.pi / 135, 200) 
 	
 	for r,theta in lines[0]: 
 		a = np.cos(theta) 
@@ -83,10 +83,10 @@ def find_vertices(img, vertices):
 
 
 def draw_points(cnt, img):
-	min_width=99999
-	max_width=0
-	min_height=99999
-	max_height=0
+	min_width = 99999
+	max_width = 0
+	min_height = 99999
+	max_height = 0
 	for points in cnt:
 		for point in points:
 			if(point[0]< min_width):

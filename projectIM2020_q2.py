@@ -1,6 +1,6 @@
 ### Students: Ofir Cohen, Saar Weitzman ###
 ### ID: 312255847, 204175137 ###
-### Date: 22/3/2020 ###
+### Date: 29/3/2020 ###
 
 import cv2
 import numpy as np
@@ -30,9 +30,6 @@ def find_circles(img, kernel1, kernel2):
 
 def find_big_circles(gray, kernel):
 	gradient = cv2.morphologyEx(gray, cv2.MORPH_GRADIENT, kernel)
-	#clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-	#cl = clahe.apply(gradient)
-	#blurred = cv2.medianBlur(cl, 7)
 	blurred = cv2.blur(gradient, (3,3))
 	circles = cv2.HoughCircles(blurred, cv2.HOUGH_GRADIENT, 1, 70, param1=100, param2=55.5, minRadius=17, maxRadius=45)
 	return circles
@@ -40,18 +37,12 @@ def find_big_circles(gray, kernel):
 
 def find_medium_circles(gray, kernel):
 	opening = cv2.morphologyEx(gray, cv2.MORPH_CLOSE, kernel)
-	# clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8,8))
-	# cl = clahe.apply(opening)
-	# blurred = cv2.medianBlur(cl, 5)
 	blurred = cv2.blur(opening, (3,3))
 	circles = cv2.HoughCircles(blurred, cv2.HOUGH_GRADIENT, 1, 48, param1=100, param2=55, minRadius=10, maxRadius=37)
 	return circles
 
 
 def find_little_circles(gray):
-	#clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8,8))
-	#cl = clahe.apply(gray)
-	#blurred = cv2.medianBlur(cl, 5)
 	blurred = cv2.blur(gray, (5,5))
 	circles = cv2.HoughCircles(blurred, cv2.HOUGH_GRADIENT, 1, 5, param1=100, param2=33, minRadius=3, maxRadius=20)
 	return circles
@@ -69,6 +60,7 @@ def draw_circles(img, circles):
 			cv2.circle(img, center, 1, (0,0,255), 1)
 
 
+# Check that there are no multiply circles at a certain area
 def circle_exists(img, x, y):
 	height, width, channel = img.shape
 	for row in range(y-30,y+30):
@@ -96,11 +88,10 @@ def plot_results(img, circles):
 def main():
 	paths = [
 				'./images/q2/00001.png', './images/q2/00002.png', './images/q2/00003.png', './images/q2/00005.png', './images/q2/00006.png',
-				'./images/q2/00007.png', './images/q2/00010.png', './images/q2/00471.png', './images/q2/00009.png', './images/q2/00473.png', 
+				'./images/q2/00007.png', './images/q2/00009.png', './images/q2/00010.png', './images/q2/00471.png',  './images/q2/00473.png', 
 				'./images/q2/00475.png', './images/q2/00476.png', './images/q2/00477.png', './images/q2/00478.png', './images/q2/00480.png'
 			]
 				
-
 	kernel1 = np.array(	[
 							[0,0,1,0,0],
 							[0,1,1,1,0],

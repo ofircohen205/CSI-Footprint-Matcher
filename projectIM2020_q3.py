@@ -1,6 +1,6 @@
 ### Students: Ofir Cohen, Saar Weitzman ###
 ### ID: 312255847, 204175137 ###
-### Date: 22/3/2020 ###
+### Date: 29/3/2020 ###
 
 ############################ IMPORTS ##############################
 import cv2
@@ -102,7 +102,7 @@ def find_similar_db_image(img, input_num):
 
     return ssim_max, mse_min, db_closest_img, db_closest_img_name
 
-######################################## Start of new solution to q3#############################################################
+######################################## Start of sift solution to q3#############################################################
 
 def showImages(input_img, db_img):
     '''
