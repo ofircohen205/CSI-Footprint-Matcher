@@ -71,4 +71,4 @@ The outcome for this part is not similar to the outcome in part 2 because the fo
 
 
 ---
-Create by Ofir Cohen and Saar Weitzman
+© 2020 Ofir Cohen Saar Weitzman All Rights Reserved
