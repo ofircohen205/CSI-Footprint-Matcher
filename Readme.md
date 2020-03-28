@@ -68,3 +68,7 @@ We've dealt with the issue with the following steps:
 4. Use HoughCircles to find patterns of a circles
 
 The outcome for this part is not similar to the outcome in part 2 because the footprints are not "perfect". for example, the image is much more "dirty".
+
+
+---
+Create by Ofir Cohen and Saar Weitzman
